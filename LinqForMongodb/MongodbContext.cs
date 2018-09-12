@@ -15,10 +15,12 @@ namespace LinqForMongodb.Context
         /// 实例化Mongodb数据库连接
         /// </summary>
         /// <param name="conn">连接字符串</param>
-        public MongodbContext(string conn)
+        public MongodbContext(string conn,string dbname)
         {
             this.ConnectString = conn;
+            this.DbName = dbname;
             this.mongoClient = new MongoClient(this.ConnectString);
+            this.Database = mongoClient.GetDatabase(this.DbName);
         }
 
         /// <summary>
@@ -29,10 +31,17 @@ namespace LinqForMongodb.Context
         /// 连接字符串
         /// </summary>
         public string ConnectString { get; set; }
+        /// <summary>
+        /// 数据库名称
+        /// </summary>
+        public string DbName { get; set; }
+
+        public IMongoDatabase Database { get; set; }
 
         public IQueryable<T> Table<T>()
         {
-            return new Dbset<T>();
+            //return new Dbset<T>(new MongoDbQueryProvider<T>(new MongoProvider(Database)));
+            return Database.GetCollection<T>(ReflectionHelper.GetScrubbedGenericName(typeof(T))).AsQueryable();
         }
         
         #region IDisposable Support
